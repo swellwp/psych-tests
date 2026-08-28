@@ -1,0 +1,12 @@
+{
+  "name": "心理测评 · 手机自评工具",
+  "short_name": "心理测评",
+  "description": "精神科常用心理量表自评，手机完成、当场出结果、可分享给医生",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#2c3e50",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

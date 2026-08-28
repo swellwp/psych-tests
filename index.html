@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#2c3e50" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="心理测评" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <title>心理测评 · 手机自评工具</title>
+  <style>
+    :root {
+      --bg: #f4f6f8; --card: #fff; --ink: #1f2933; --sub: #6b7785;
+      --line: #e4e8ec; --primary: #2c7be5; --primary-d: #1b5fc0;
+      --shadow: 0 2px 10px rgba(20,40,70,.08);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.5;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top)); background: #fff; border-bottom: 1px solid var(--line);
+    }
+    .topbar .brand { font-weight: 700; font-size: 17px; color: var(--primary-d); }
+    .top-arc { border: 1px solid var(--primary); color: var(--primary); background: #fff; border-radius: 18px; padding: 6px 14px; font-size: 14px; }
+    .container { max-width: 680px; margin: 0 auto; }
+    #home, #test, #result, #report, #archive { padding: 14px 14px 90px; max-width: 680px; margin: 0 auto; }
+    h1 { margin: 6px 0; font-size: 24px; }
+    h2 { font-size: 16px; color: var(--sub); margin: 18px 4px 8px; }
+    .hero { text-align: center; padding: 14px 6px 4px; }
+    .hero h1 { color: var(--primary-d); }
+    .hero p { color: var(--sub); margin: 4px 0 0; font-size: 14px; }
+    .foot { color: var(--sub); font-size: 12px; text-align: center; margin: 22px 0 6px; }
+    .group { margin-top: 6px; }
+    .cards { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 520px) { .cards { grid-template-columns: 1fr 1fr; } }
+    .card {
+      text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 6px; cursor: pointer;
+    }
+    .card:active { transform: scale(.99); }
+    .card-name { font-weight: 600; font-size: 16px; }
+    .card-meta { font-size: 12px; color: var(--sub); }
+    /* 答题 */
+    .test-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; position: sticky; top: 0; background: var(--bg); padding: 6px 0; z-index: 10; }
+    .test-top .back { border: none; background: none; color: var(--primary); font-size: 15px; padding: 4px 0; }
+    .test-title { font-weight: 600; font-size: 16px; flex: 1; }
+    .progress { font-size: 13px; color: var(--sub); }
+    .intro { color: var(--sub); font-size: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 4px 0 12px; }
+    .q { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--shadow); }
+    .q-t { font-weight: 500; margin-bottom: 10px; }
+    .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .opt {
+      border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 10px 8px; font-size: 14px; color: var(--ink); cursor: pointer; text-align: center;
+    }
+    .opt.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+    .num-inp { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; }
+    .submitbar { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--line); }
+    .submit-btn { width: 100%; max-width: 680px; margin: 0 auto; display: block; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 600; }
+    /* 结果 */
+    .res-head { border-left: 5px solid var(--primary); background: #fff; border-radius: 12px; padding: 14px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .res-name { font-weight: 700; font-size: 18px; }
+    .res-level { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .res-time { font-size: 12px; color: var(--sub); margin-top: 4px; }
+    .sec { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--shadow); }
+    .sec-t { font-weight: 600; font-size: 14px; color: var(--sub); margin-bottom: 8px; }
+    .tb-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+    .tb-row:last-child { border-bottom: none; }
+    .tb-k { color: var(--ink); }
+    .tb-v { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .tb-v .of { color: var(--sub); font-weight: 400; font-size: 13px; }
+    .tb-note { font-size: 12px; color: #d9730d; margin-left: 6px; font-weight: 400; }
+    .notes { background: #fff8ef; border: 1px solid #f3e0c0; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
+    .notes p { margin: 4px 0; font-size: 14px; color: #8a5a00; }
+    .disclaimer { color: var(--sub); font-size: 12px; text-align: center; margin: 8px 0; }
+    .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+    .btn { flex: 1; min-width: 120px; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 12px; padding: 13px; font-size: 15px; }
+    .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn.ghost { background: #fff; color: var(--sub); }
+    /* 分享弹层 */
+    .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 100; }
+    .modal { background: #fff; border-radius: 16px; padding: 18px; max-width: 420px; width: 100%; }
+    .modal-t { font-weight: 700; font-size: 17px; }
+    .modal-p { font-size: 13px; color: var(--sub); margin: 6px 0 12px; }
+    .share-link { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 13px; }
+    .qr { text-align: center; margin: 12px 0; }
+    .qr svg { width: 200px; height: 200px; }
+    /* 归档 */
+    .arc-list { display: flex; flex-direction: column; gap: 10px; }
+    .arc-card { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; box-shadow: var(--shadow); }
+    .arc-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+    .arc-main { flex: 1; }
+    .arc-name { font-weight: 600; }
+    .arc-sub { font-size: 12px; color: var(--sub); }
+    .arc-act { color: var(--primary); font-size: 14px; }
+    .empty { color: var(--sub); text-align: center; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <div id="home" style="display:none"></div>
+  <div id="test" style="display:none"></div>
+  <div id="result" style="display:none"></div>
+  <div id="report" style="display:none"></div>
+  <div id="archive" style="display:none"></div>
+
+  <script src="libs/qrcode.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
