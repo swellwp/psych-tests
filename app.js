@@ -1644,8 +1644,30 @@
       const mk = el('button', 'btn ghost push-entry', '为运动员生成专属链接（可只选部分量表）→');
       mk.onclick = openPushModal;
       root.appendChild(mk);
-      const whoLbl = athleteLabel();
-      if (whoLbl) root.appendChild(el('div', 'who', esc(whoLbl)));
+      // 运动员身份区：链接已带则只读横幅（可改），未带则请运动员自填
+      const who = state.pushName || state.pushAid;
+      if (who) {
+        const wbox = el('div', 'who');
+        wbox.innerHTML = esc(athleteLabel()) + ' <span class="who-edit-link">修改</span>';
+        wbox.querySelector('.who-edit-link').onclick = () => {
+          state.pushName = ''; state.pushAid = ''; renderHome();
+        };
+        root.appendChild(wbox);
+      } else {
+        const we = el('div', 'who-edit');
+        we.appendChild(el('div', 'who-edit-t', '请先填写您的姓名/编号（便于回传结果时区分）：'));
+        const fn = el('input', 'share-link'); fn.placeholder = '您的姓名';
+        const fa = el('input', 'share-link'); fa.placeholder = '编号（可选）';
+        we.appendChild(fn); we.appendChild(fa);
+        const okb = el('button', 'btn primary', '确认');
+        okb.onclick = () => {
+          state.pushName = (fn.value || '').trim();
+          state.pushAid = (fa.value || '').trim();
+          renderHome();
+        };
+        we.appendChild(okb);
+        root.appendChild(we);
+      }
     }
     const list = pushed ? SCALES.filter(s => pushed.indexOf(s.id) >= 0) : SCALES;
     if (!list.length) { root.appendChild(el('p', 'empty', '推送链接无效或量表不存在，请向发送者索取新链接。')); return; }
