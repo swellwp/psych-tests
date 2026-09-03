@@ -1633,6 +1633,14 @@
       (pushed
         ? '已为您安排 ' + pushed.length + ' 项测评 · 完成后可分享结果'
         : '手机即可完成 · 当场出结果 · 可分享结果') + '</p>'));
+    if (pushed) {
+      const fwd = el('button', 'btn ghost push-entry', '复制本页链接，转发给他人 →');
+      fwd.onclick = () => {
+        if (copyText(location.href)) fwd.textContent = '链接已复制 ✓ 可转发给运动员/教练';
+        else window.prompt('复制此链接转发给被测者：', location.href);
+      };
+      root.appendChild(fwd);
+    }
     const list = pushed ? SCALES.filter(s => pushed.indexOf(s.id) >= 0) : SCALES;
     if (!list.length) { root.appendChild(el('p', 'empty', '推送链接无效或量表不存在，请向发送者索取新链接。')); return; }
     // 按 group 分组
@@ -1884,6 +1892,15 @@
     catch (e) { return iso; }
   }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function copyText(text) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy'); ta.remove();
+      return !!ok;
+    } catch (e) { return false; }
+  }
 
   /* ---------------- 分享 ---------------- */
   function openShare(s, result) {
