@@ -1603,7 +1603,7 @@
   function getScale(id) { return SCALES.find(s => s.id === id); }
 
   /* ---------------- 状态 ---------------- */
-  const state = { scale: null, answers: [], mode: 'test' };
+  const state = { scale: null, answers: [], mode: 'test', pushName: '', pushAid: '' };
 
   /* ---------------- DOM 辅助 ---------------- */
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -1640,6 +1640,12 @@
         else window.prompt('复制此链接转发给被测者：', location.href);
       };
       root.appendChild(fwd);
+      // 教练：为某运动员生成专属链接（可从当前量表里只选部分 + 填姓名/编号）
+      const mk = el('button', 'btn ghost push-entry', '为运动员生成专属链接（可只选部分量表）→');
+      mk.onclick = openPushModal;
+      root.appendChild(mk);
+      const whoLbl = athleteLabel();
+      if (whoLbl) root.appendChild(el('div', 'who', esc(whoLbl)));
     }
     const list = pushed ? SCALES.filter(s => pushed.indexOf(s.id) >= 0) : SCALES;
     if (!list.length) { root.appendChild(el('p', 'empty', '推送链接无效或量表不存在，请向发送者索取新链接。')); return; }
@@ -1674,16 +1680,26 @@
   function openPushModal() {
     const wrap = el('div', 'modal-mask');
     const box = el('div', 'modal');
-    box.innerHTML = '<div class="modal-t">定向推送测评</div>' +
-      '<p class="modal-p">勾选需要被测者完成的量表，生成本次专属链接/二维码。对方打开后只会看到勾选的量表，答完仍可一键分享结果。他评/医师评定量表（BPRS、Y-BOCS、YMRS、MADRS、CY-BOCS）不参与推送。</p>';
+    // 可选量表池：在推送页内打开时，只能从已授权的量表里挑选（教练分发）；否则可选全部自评量表
+    const pool = (state.pushIds && state.pushIds.length)
+      ? SCALES.filter(s => state.pushIds.indexOf(s.id) >= 0)
+      : SCALES.filter(s => s.role !== 'clinician');
+    const isSubset = !!(state.pushIds && state.pushIds.length);
+    box.innerHTML = '<div class="modal-t">生成运动员专属测评链接</div>' +
+      '<p class="modal-p">' + (isSubset ? '从本次已安排的量表里勾选要发给该运动员的部分（可只选几项），' : '勾选需要被测者完成的量表，') +
+      '并可填写运动员姓名与编号，结果回传时将自动带上，便于区分。' + (isSubset ? '' : '他评/医师评定量表（BPRS、Y-BOCS、YMRS、MADRS、CY-BOCS）不参与推送。') + '</p>';
     const scroll = el('div', 'modal-scroll');
-    SCALES.filter(s => s.role !== 'clinician').forEach(s => {
+    pool.forEach(s => {
       const lab = el('label', 'pick');
       lab.innerHTML = '<input type="checkbox" value="' + s.id + '"><span>' + s.name +
         ' <em>' + s.items.length + '题</em></span>';
       scroll.appendChild(lab);
     });
     box.appendChild(scroll);
+    box.appendChild(el('p', 'modal-p', '填写被测者信息（可选，回传结果时自动带上）：'));
+    const fName = el('input', 'share-link'); fName.placeholder = '运动员姓名';
+    const fAid = el('input', 'share-link'); fAid.placeholder = '编号';
+    box.appendChild(fName); box.appendChild(fAid);
     const row = el('div', 'acts');
     const gen = el('button', 'btn primary', '生成推送链接');
     const close = el('button', 'btn ghost', '关闭');
@@ -1691,9 +1707,13 @@
     gen.onclick = () => {
       const ids = Array.from(box.querySelectorAll('input:checked')).map(i => i.value);
       if (!ids.length) { alert('请至少勾选一个量表。'); return; }
-      const url = location.origin + location.pathname + '#s=' + ids.join(',');
-      box.innerHTML = '<div class="modal-t">推送链接已生成</div>' +
-        '<p class="modal-p">把这个链接发给被测者（微信/短信均可），或让对方直接扫码。对方只会看到勾选的 ' + ids.length + ' 个量表。</p>';
+      const nm = (fName.value || '').trim();
+      const aid = (fAid.value || '').trim();
+      const url = location.origin + location.pathname + '#s=' + ids.join(',') +
+        (nm ? '&n=' + encodeURIComponent(nm) : '') + (aid ? '&id=' + encodeURIComponent(aid) : '');
+      const whoTxt = (nm || aid) ? '（' + (nm || '') + (aid ? ' / ' + aid : '') + '）' : '';
+      box.innerHTML = '<div class="modal-t">专属链接已生成' + esc(whoTxt) + '</div>' +
+        '<p class="modal-p">把这个链接发给该运动员（微信/短信均可），或让对方直接扫码。对方只会看到勾选的 ' + ids.length + ' 个量表，作答后回传的结果将自动标注' + (whoTxt ? '其姓名/编号' : '被测者信息') + '。</p>';
       const link = el('input', 'share-link'); link.readOnly = true; link.value = url;
       box.appendChild(link);
       const qrBox = el('div', 'qr');
@@ -1832,7 +1852,8 @@
   /* ---------------- 结果页 ---------------- */
   function buildReportPayload(s, result) {
     return {
-      v: 1, s: s.id, n: s.name, t: new Date().toISOString(), r: result
+      v: 1, s: s.id, n: s.name, t: new Date().toISOString(), r: result,
+      who: (state.pushName || state.pushAid) ? { name: state.pushName || '', aid: state.pushAid || '' } : null
     };
   }
   function renderResult(result, s, isReport) {
@@ -1840,8 +1861,10 @@
     root.innerHTML = '';
     const head = el('div', 'res-head');
     head.style.borderColor = LEVEL_COLOR[result.level] || '#888';
+    const whoLbl = athleteLabel();
     head.innerHTML = '<div class="res-name">' + s.name + '</div>' +
       '<div class="res-level" style="color:' + (LEVEL_COLOR[result.level] || '#888') + '">' + result.levelText + '</div>' +
+      (whoLbl ? '<div class="res-who">' + esc(whoLbl) + '</div>' : '') +
       (isReport ? '<div class="res-time">测评时间：' + fmtTime(buildReportTime(s)) + '</div>' : '');
     root.appendChild(head);
 
@@ -1901,6 +1924,14 @@
       return !!ok;
     } catch (e) { return false; }
   }
+  function safeDecode(x) { try { return decodeURIComponent(x); } catch (e) { return x; } }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function athleteLabel() {
+    const name = (state.reportPayload && state.reportPayload.who) ? state.reportPayload.who.name : state.pushName;
+    const aid = (state.reportPayload && state.reportPayload.who) ? state.reportPayload.who.aid : state.pushAid;
+    if (name || aid) return '运动员：' + (name || '（未填姓名）') + (aid ? '（' + aid + '）' : '');
+    return '';
+  }
 
   /* ---------------- 分享 ---------------- */
   function openShare(s, result) {
@@ -1954,7 +1985,8 @@
       const dot = LEVEL_COLOR[lv] || '#888';
       card.innerHTML = '<div class="arc-dot" style="background:' + dot + '"></div>' +
         '<div class="arc-main"><div class="arc-name">' + (rec.n || rec.s) + '</div>' +
-        '<div class="arc-sub">' + fmtTime(rec.t) + ' · ' + (rec.r ? rec.r.levelText : '') + '</div></div>' +
+        '<div class="arc-sub">' + fmtTime(rec.t) + ' · ' + (rec.r ? rec.r.levelText : '') +
+        (rec.who ? ' · 运动员：' + (rec.who.name || '（未填姓名）') + (rec.who.aid ? '（' + rec.who.aid + '）' : '') : '') + '</div></div>' +
         '<div class="arc-act">查看</div>';
       card.onclick = () => viewArchive(rec);
       wrap.appendChild(card);
@@ -1982,11 +2014,13 @@
         return true;
       }
     }
-    // 医生定向推送：#s=id1,id2 → 首页只显示指定量表
-    const ms = h.match(/#s=([a-zA-Z0-9_,]+)/);
+    // 定向推送：#s=id1,id2[&n=姓名][&id=编号] → 首页只显示指定量表并带入被测者信息
+    const ms = h.match(/#s=([a-zA-Z0-9_,]+)(?:&n=([^&]*))?(?:&id=([^&]*))?/);
     if (ms) {
       const ids = ms[1].split(',').filter(x => getScale(x));
       state.pushIds = ids.length ? ids : [];
+      state.pushName = ms[2] ? safeDecode(ms[2]) : '';
+      state.pushAid = ms[3] ? safeDecode(ms[3]) : '';
     }
     return false;
   }
@@ -2000,7 +2034,7 @@
     }
   };
   // 测试/调试钩子（本地工具，无妨）
-  window.PsychTest = { SCALES, getScale, b64encode, b64decode, loadArchive, saveArchive, saveToArchive, timeToMin };
+  window.PsychTest = { SCALES, getScale, b64encode, b64decode, loadArchive, saveArchive, saveToArchive, buildReportPayload, timeToMin };
 
   // 顶部归档入口
   function mountTopBar() {
