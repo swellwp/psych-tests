@@ -180,8 +180,9 @@
 
     /* ===== Y-BOCS 耶鲁-布朗强迫 ===== */
     {
-      id: 'ybocs', name: 'Y-BOCS 强迫量表', short: 'Y-BOCS', group: '强迫/其他专项',
-      intro: '请根据最近一周的情况评估（0=无，4=极重）。',
+      id: 'ybocs', name: 'Y-BOCS 耶鲁-布朗强迫量表（医师评定）', short: 'Y-BOCS', group: '强迫/其他专项',
+      role: 'clinician', optsCls: 'cols1',
+      intro: '⚠️ 医师评定量表：请由经过训练的精神科专业人员，依据最近一周对强迫思维与强迫行为的观察与交谈，按 0=无、4=极重逐项评分（总分 0–40）。',
       options: [
         { v: 0, t: '无' }, { v: 1, t: '轻' }, { v: 2, t: '中' }, { v: 3, t: '重' }, { v: 4, t: '极重' }
       ],
@@ -1414,7 +1415,7 @@
     const wrap = el('div', 'modal-mask');
     const box = el('div', 'modal');
     box.innerHTML = '<div class="modal-t">定向推送测评</div>' +
-      '<p class="modal-p">勾选需要被测者完成的量表，生成本次专属链接/二维码。对方打开后只会看到勾选的量表，答完仍可一键分享结果给您。医师评定量表（BPRS）不参与推送。</p>';
+      '<p class="modal-p">勾选需要被测者完成的量表，生成本次专属链接/二维码。对方打开后只会看到勾选的量表，答完仍可一键分享结果给您。医师评定量表（BPRS、Y-BOCS、YMRS、MADRS、CY-BOCS）不参与推送。</p>';
     const scroll = el('div', 'modal-scroll');
     SCALES.filter(s => s.role !== 'clinician').forEach(s => {
       const lab = el('label', 'pick');
