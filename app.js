@@ -554,6 +554,224 @@
         rows.push({ label: 'BPRS 总分', value: total, of: 126 });
         return { level, levelText, sections: [{ title: '因子分与总分', rows }], notes };
       }
+    },
+
+    /* ===== HCL-32 轻躁狂症状清单（自评·双相筛查） ===== */
+    {
+      id: 'hcl32', name: 'HCL-32 轻躁狂症状清单', short: 'HCL-32', group: '双相/精神病性',
+      intro: '请回顾您一生中情绪最积极、精力最旺盛或最易激惹的一段时期（即使当时未被诊断）。以下哪些描述符合您当时的状态？请勾选所有符合的项。',
+      options: [{ v: 1, t: '是' }, { v: 0, t: '否' }],
+      items: [
+        '我需要睡眠的时间比平时少',
+        '我感觉精力充沛或活动增多',
+        '我更加自信',
+        '我更加喜欢我的工作',
+        '我更加喜欢交往（打更多电话、外出更频繁）',
+        '我喜欢旅行并且确实旅行了很多',
+        '当时喜欢开快车或在驾驶中更加不顾风险',
+        '我会花比较多的钱或很多的金钱',
+        '在我的日常生活中更加冒险',
+        '我的活动量会增多（如花较多时间体育运动）',
+        '我计划了更多的活动和方案',
+        '我有很多的想法，我更加才思敏捷',
+        '我不再害羞，不再前怕狼后怕虎',
+        '我穿的衣服更加鲜艳/打扮更加时髦',
+        '我希望接触很多人，和/或的确结识了更多的人',
+        '我对性更加感兴趣，和/或性欲明显增加',
+        '我表现得更加轻浮，或性行为比过去多',
+        '我更加健谈',
+        '我思维更加敏捷',
+        '当我讲话时我更喜欢开玩笑或说俏皮话',
+        '我比较容易分心',
+        '我从事很多新奇的事情',
+        '我的思维经常从一个话题跳到另一个话题',
+        '我感到做事更加迅速和/或更加容易',
+        '我更加没有耐心，和/或更容易对别人发怒',
+        '我常常令他人疲惫不堪或恼怒',
+        '我经常与人争吵',
+        '我的情绪激昂，更加乐观',
+        '我喝更多的咖啡或茶',
+        '我抽更多的烟',
+        '我喝更多的酒',
+        '我吃更多的药物（镇静药、抗焦虑药、兴奋药、安眠药等）'
+      ],
+      compute(a) {
+        let sum = 0;
+        for (let i = 0; i < 32; i++) sum += (+a[i] || 0);
+        const act = [0, 1, 2, 3, 4, 5, 6].some(i => (+a[i] || 0) === 1);
+        const positive = sum >= 14 && act;
+        const level = positive ? 'positive' : 'negative';
+        const levelText = positive ? '筛查阳性' : '筛查阴性';
+        const note = positive
+          ? 'HCL-32 筛查阳性（"是"≥14 项，且激活簇〈前 7 题〉至少 1 项阳性）：提示既往可能存在轻躁狂/躁狂发作，建议结合 MDQ、YMRS 及临床访谈（如 SCID）进一步评估，切勿单凭此结果诊断。'
+          : '未达 HCL-32 阳性标准（需"是"≥14 项且激活簇至少 1 项阳性）。若临床仍高度怀疑双相障碍，请结合其他评估。';
+        return {
+          level, levelText,
+          sections: [{
+            title: '得分',
+            rows: [
+              { label: '"是"的条目数（≥14 为症状达标）', value: sum, of: 32 },
+              { label: '激活簇（前 7 题）是否至少 1 项"是"', value: act ? '是' : '否' },
+              { label: '筛查结论', value: positive ? '阳性' : '阴性' }
+            ]
+          }],
+          notes: [note]
+        };
+      }
+    },
+
+    /* ===== YMRS 杨氏躁狂评定量表（医师评定） ===== */
+    {
+      id: 'ymrs', name: 'YMRS 杨氏躁狂评定量表（医师评定）', short: 'YMRS', group: '双相/精神病性',
+      role: 'clinician', optsCls: 'cols1',
+      intro: '⚠️ 医师评定量表：请由经过训练的精神科专业人员，依据最近一周的观察与交谈逐项评分。第 5、6、8、9 项为 0–8 分，其余为 0–4 分，总分 0–60。',
+      options: [{ v: 0, t: '0 无' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }, { v: 4, t: '4 极重' }],
+      items: [
+        { t: '1. 心境高涨' },
+        { t: '2. 活动与精力增加' },
+        { t: '3. 性兴趣' },
+        { t: '4. 睡眠减少' },
+        { t: '5. 易激惹', options: [{ v: 0, t: '0 无' }, { v: 2, t: '2 稍易激惹，能控制' }, { v: 4, t: '4 明显易激惹，时有不耐烦' }, { v: 6, t: '6 经常易激惹，回答生硬' }, { v: 8, t: '8 敌意、不合作' }] },
+        { t: '6. 言语（速度与数量）', options: [{ v: 0, t: '0 无' }, { v: 2, t: '2 话较多' }, { v: 4, t: '4 语速/量时增、啰嗦' }, { v: 6, t: '6 紧迫、持续增加、难打断' }, { v: 8, t: '8 说个不停、无法打断' }] },
+        { t: '7. 语言-思维形式障碍' },
+        { t: '8. 思维内容', options: [{ v: 0, t: '0 正常' }, { v: 2, t: '2 可疑设想/新兴趣' }, { v: 4, t: '4 特殊计划/超宗教' }, { v: 6, t: '6 夸大/偏执观念' }, { v: 8, t: '8 幻觉或妄想' }] },
+        { t: '9. 破坏-攻击行为', options: [{ v: 0, t: '0 无' }, { v: 2, t: '2 偶发怒、好讥讽' }, { v: 4, t: '4 时常易怒、威胁喊叫' }, { v: 6, t: '6 威胁性行为、可安抚' }, { v: 8, t: '8 狂暴、破坏、无法检查' }] },
+        { t: '10. 外表' },
+        { t: '11. 自知力' }
+      ],
+      compute(a) {
+        const v = a.map(x => +x || 0);
+        const total = v.reduce((s, x) => s + x, 0);
+        let level, levelText, note;
+        if (total <= 8) { level = 'normal'; levelText = '无明显躁狂'; note = '总分 ≤8，无明显躁狂症状。'; }
+        else if (total <= 20) { level = 'mild'; levelText = '轻度躁狂'; note = '轻度躁狂（9–20 分），建议密切随访与临床评估。'; }
+        else if (total <= 30) { level = 'moderate'; levelText = '中度躁狂'; note = '中度躁狂（21–30 分），建议积极干预。'; }
+        else { level = 'severe'; levelText = '重度躁狂'; note = '重度躁狂（>30 分），建议尽快系统治疗与监测。'; }
+        return {
+          level, levelText,
+          sections: [{ title: '得分', rows: [{ label: 'YMRS 总分', value: total, of: 60 }] }],
+          notes: [note]
+        };
+      }
+    },
+
+    /* ===== MADRS 蒙哥马利抑郁评定量表（医师评定） ===== */
+    {
+      id: 'madrs', name: 'MADRS 蒙哥马利抑郁评定量表（医师评定）', short: 'MADRS', group: '双相/精神病性',
+      role: 'clinician', optsCls: 'cols1',
+      intro: '⚠️ 医师评定量表：请由经过训练的精神科专业人员，依据最近一周的观察与交谈，按 0–6 分评定（总分 0–60）。',
+      options: [{ v: 0, t: '0' }, { v: 1, t: '1' }, { v: 2, t: '2' }, { v: 3, t: '3' }, { v: 4, t: '4' }, { v: 5, t: '5' }, { v: 6, t: '6 极重' }],
+      items: [
+        '1. 观察到的悲伤（0 无；2 偶发可疑；4 明显不持久；6 持续自发）',
+        '2. 自述悲伤（0 无；2 难过偶发；4 难受持久；6 极度难以安慰）',
+        '3. 内心紧张（0 无；2 偶发紧张；4 经常可缓解；6 持续极度）',
+        '4. 睡眠减少（0 正常；2 轻度减少；4 明显减少；6 几乎不眠）',
+        '5. 食欲下降（0 正常；2 轻度；4 明显；6 拒食）',
+        '6. 注意集中困难（0 无；2 轻度；4 明显需努力；6 严重无法）',
+        '7. 乏力/无活力（0 无；2 易疲劳；4 经常乏力；6 极度无法活动）',
+        '8. 不能感受/情感迟钝（0 能感受；2 兴趣稍减；4 明显迟钝；6 完全不能感受快乐）',
+        '9. 悲观想法（0 无；2 偶尔；4 经常悲观；6 绝望无价值）',
+        '10. 自杀想法（0 无；2 闪现；4 经常无计划；6 有计划/企图）'
+      ],
+      compute(a) {
+        const v = a.map(x => +x || 0);
+        const total = v.reduce((s, x) => s + x, 0);
+        let level, levelText, note;
+        if (total <= 6) { level = 'normal'; levelText = '正常/缓解'; note = '总分 ≤6，处于正常或临床缓解范围。'; }
+        else if (total <= 19) { level = 'mild'; levelText = '轻度抑郁'; note = '轻度抑郁（7–19 分）。'; }
+        else if (total <= 34) { level = 'moderate'; levelText = '中度抑郁'; note = '中度抑郁（20–34 分），建议积极评估与干预。'; }
+        else { level = 'severe'; levelText = '重度抑郁'; note = '重度抑郁（≥35 分），建议尽快系统治疗，注意自杀风险。'; }
+        const notes = [note];
+        if (v[9] >= 4) notes.push('⚠️ 自杀想法条目 ≥4 分，提示自杀风险，须优先评估与干预。');
+        return {
+          level, levelText,
+          sections: [{ title: '得分', rows: [{ label: 'MADRS 总分', value: total, of: 60 }] }],
+          notes
+        };
+      }
+    },
+
+    /* ===== OCI-R 强迫量表修订版（自评） ===== */
+    {
+      id: 'ocir', name: 'OCI-R 强迫量表修订版', short: 'OCI-R', group: '强迫/其他专项',
+      intro: '请根据过去一个月的情况，选择各项经验对您造成困扰或烦恼的程度（0=完全没有，4=极重度）。',
+      options: [{ v: 0, t: '0 无' }, { v: 1, t: '1 轻' }, { v: 2, t: '2 中' }, { v: 3, t: '3 重' }, { v: 4, t: '4 极重' }],
+      items: [
+        '我储存了太多东西，多到妨碍了我的生活空间',
+        '我会过度频繁地检查事物，超出必要的程度',
+        '如果物品没有被妥善排列整齐，我就感到心烦意乱',
+        '我在做事情时，会感到有股冲动必须计数',
+        '当我知道某物体曾被陌生人或特定人士碰过，我就很难再去触碰它',
+        '我发现很难控制自己的想法',
+        '我会收集一些我并不需要的东西',
+        '我会反复检查门、窗、抽屉等',
+        '如果别人改变了我安排事物的方式，我就感到心烦',
+        '我觉得我必须重复某些特定的数字',
+        '有时候我只是因为觉得自己被污染了，就必须清洗自己',
+        '脑海中会不受控制地浮现一些不愉快的想法，这让我很困扰',
+        '我会避免丢弃东西，因为害怕以后可能还需要它们',
+        '关掉瓦斯、水龙头或电灯开关后，我会反复检查确认',
+        '我需要将物品按照特定的顺序排列',
+        '我觉得世界上有好数字跟坏数字之分',
+        '我洗手的次数比一般人多，时间也更长',
+        '我经常会有一些不好的念头，并且很难摆脱它们'
+      ],
+      compute(a) {
+        const F = {
+          '洗涤': [4, 10, 16], '强迫思维': [5, 11, 17], '囤积': [0, 6, 12],
+          '排序': [2, 8, 14], '检查': [1, 7, 13], '中和': [3, 9, 15]
+        };
+        const sub = {};
+        let total = 0;
+        for (let i = 0; i < 18; i++) total += (+a[i] || 0);
+        const rows = Object.keys(F).map(k => {
+          const s = F[k].reduce((t, i) => t + (+a[i] || 0), 0);
+          return { label: k + '（维度分）', value: s, of: 12 };
+        });
+        rows.push({ label: 'OCI-R 总分', value: total, of: 72 });
+        let level, levelText, note;
+        if (total <= 12) { level = 'normal'; levelText = '无明显'; note = '总分 ≤12，未见明显强迫症状。'; }
+        else if (total <= 23) { level = 'mild'; levelText = '轻度'; note = '轻度强迫症状（13–23 分），可观察。'; }
+        else if (total <= 35) { level = 'moderate'; levelText = '中度'; note = '中度强迫症状（24–35 分），建议专业评估与 CBT 等干预。'; }
+        else { level = 'severe'; levelText = '重度'; note = '重度强迫症状（≥36 分），建议积极药物/心理治疗。'; }
+        const notes = [note];
+        const prom = Object.keys(F).filter(k => F[k].reduce((t, i) => t + (+a[i] || 0), 0) >= 8);
+        if (prom.length) notes.push('突出维度（≥8 分）：' + prom.join('、') + '，为当前主要靶症状。');
+        return { level, levelText, sections: [{ title: '六维度分与总分', rows }], notes };
+      }
+    },
+
+    /* ===== CY-BOCS 儿童耶鲁-布朗强迫量表（医师评定） ===== */
+    {
+      id: 'cybocs', name: 'CY-BOCS 儿童耶鲁-布朗强迫量表（医师评定）', short: 'CY-BOCS', group: '强迫/其他专项',
+      role: 'clinician', optsCls: 'cols1',
+      intro: '⚠️ 医师评定量表（儿童版）：请由经过训练的精神科专业人员，向儿童及其家长询问后，依据最近一周评定（0=无，4=极重，总分 0–40）。适用于 17 岁及以下儿童青少年强迫症严重度评估。',
+      options: [{ v: 0, t: '无' }, { v: 1, t: '轻' }, { v: 2, t: '中' }, { v: 3, t: '重' }, { v: 4, t: '极重' }],
+      items: [
+        '强迫思维：每天占用的时间', '强迫思维：对日常活动的干扰程度', '强迫思维：带来的痛苦/烦恼程度', '强迫思维：试图抵抗的程度', '强迫思维：主观上能控制/摆脱的程度',
+        '强迫行为：每天占用的时间', '强迫行为：对日常活动的干扰程度', '强迫行为：带来的痛苦/烦恼程度', '强迫行为：试图抵抗的程度', '强迫行为：主观上能控制/摆脱的程度'
+      ],
+      compute(a) {
+        let obs = 0, comp = 0;
+        for (let i = 0; i < 5; i++) obs += (+a[i] || 0);
+        for (let i = 5; i < 10; i++) comp += (+a[i] || 0);
+        const total = obs + comp;
+        let level, levelText, note;
+        if (total <= 7) { level = 'normal'; levelText = '亚临床/无'; note = '未见明显强迫症状。'; }
+        else if (total <= 15) { level = 'mild'; levelText = '轻度'; note = '轻度强迫，可观察并适当心理干预。'; }
+        else if (total <= 23) { level = 'moderate'; levelText = '中度'; note = '中度强迫，建议专业评估与 CBT 等干预。'; }
+        else if (total <= 31) { level = 'severe'; levelText = '重度'; note = '重度强迫，建议积极药物/心理治疗。'; }
+        else { level = 'severe'; levelText = '极重度'; note = '极重度强迫，建议尽快系统治疗。'; }
+        return {
+          level, levelText,
+          sections: [
+            { title: '强迫思维', rows: [{ label: '小计', value: obs, of: 20 }] },
+            { title: '强迫行为', rows: [{ label: '小计', value: comp, of: 20 }] },
+            { title: '合计', rows: [{ label: '总分', value: total, of: 40 }] }
+          ],
+          notes: [note]
+        };
+      }
     }
   ];
 
