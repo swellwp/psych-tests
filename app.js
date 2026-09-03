@@ -1655,13 +1655,15 @@
         root.appendChild(wbox);
       } else {
         const we = el('div', 'who-edit');
-        we.appendChild(el('div', 'who-edit-t', '请先填写您的姓名/编号（便于回传结果时区分）：'));
-        const fn = el('input', 'share-link'); fn.placeholder = '您的姓名';
+        we.appendChild(el('div', 'who-edit-t', '请先填写您的姓名（必填）与编号（可选），便于回传结果时区分：'));
+        const fn = el('input', 'share-link'); fn.placeholder = '您的姓名（必填）';
         const fa = el('input', 'share-link'); fa.placeholder = '编号（可选）';
         we.appendChild(fn); we.appendChild(fa);
         const okb = el('button', 'btn primary', '确认');
         okb.onclick = () => {
-          state.pushName = (fn.value || '').trim();
+          const nm = (fn.value || '').trim();
+          if (!nm) { alert('请填写姓名（必填），便于回传结果时区分。'); fn.focus(); return; }
+          state.pushName = nm;
           state.pushAid = (fa.value || '').trim();
           renderHome();
         };
