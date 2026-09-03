@@ -1644,31 +1644,9 @@
       const mk = el('button', 'btn ghost push-entry', '为运动员生成专属链接（可只选部分量表）→');
       mk.onclick = openPushModal;
       root.appendChild(mk);
-      // 运动员身份区：链接已带则只读横幅（可改），未带则请运动员自填
-      const who = state.pushName || state.pushAid;
-      if (who) {
-        const wbox = el('div', 'who');
-        wbox.innerHTML = esc(athleteLabel()) + ' <span class="who-edit-link">修改</span>';
-        wbox.querySelector('.who-edit-link').onclick = () => {
-          state.pushName = ''; state.pushAid = ''; renderHome();
-        };
-        root.appendChild(wbox);
-      } else {
-        const we = el('div', 'who-edit');
-        we.appendChild(el('div', 'who-edit-t', '请先填写您的姓名（必填）与编号（可选），便于回传结果时区分：'));
-        const fn = el('input', 'share-link'); fn.placeholder = '您的姓名（必填）';
-        const fa = el('input', 'share-link'); fa.placeholder = '编号（可选）';
-        we.appendChild(fn); we.appendChild(fa);
-        const okb = el('button', 'btn primary', '确认');
-        okb.onclick = () => {
-          const nm = (fn.value || '').trim();
-          if (!nm) { alert('请填写姓名（必填），便于回传结果时区分。'); fn.focus(); return; }
-          state.pushName = nm;
-          state.pushAid = (fa.value || '').trim();
-          renderHome();
-        };
-        we.appendChild(okb);
-        root.appendChild(we);
+      // 运动员身份：链接已带姓名则显示只读横幅；未带则由运动员在问卷页填写
+      if (state.pushName || state.pushAid) {
+        root.appendChild(el('div', 'who', esc(athleteLabel())));
       }
     }
     const list = pushed ? SCALES.filter(s => pushed.indexOf(s.id) >= 0) : SCALES;
@@ -1780,6 +1758,17 @@
       '<div class="progress" id="progress"></div>';
     root.appendChild(top);
     if (s.intro) root.appendChild(el('p', 'intro', s.intro));
+    // 推送/安排场景下，运动员在问卷页填写姓名（必填）+ 编号（可选）
+    if (state.pushIds) {
+      const whoBox = el('div', 'who-edit test-who');
+      whoBox.appendChild(el('div', 'who-edit-t', '请填写您的姓名（必填）与编号（可选），提交前需填写：'));
+      const fn = el('input', 'share-link'); fn.id = 'who-name-input'; fn.placeholder = '您的姓名（必填）'; fn.value = state.pushName || '';
+      const fa = el('input', 'share-link'); fa.placeholder = '编号（可选）'; fa.value = state.pushAid || '';
+      fn.oninput = () => { state.pushName = fn.value.trim(); };
+      fa.oninput = () => { state.pushAid = fa.value.trim(); };
+      whoBox.appendChild(fn); whoBox.appendChild(fa);
+      root.appendChild(whoBox);
+    }
     const form = el('div', 'form');
     s.items.forEach((it, i) => {
       const item = (typeof it === 'string') ? { t: it } : it;
@@ -1852,6 +1841,12 @@
 
   function submitTest() {
     const s = state.scale;
+    if (state.pushIds && !(state.pushName && state.pushName.trim())) {
+      alert('请先填写姓名（必填）后再提交。');
+      const nm = document.getElementById('who-name-input');
+      if (nm) nm.focus();
+      return;
+    }
     const missing = [];
     for (let i = 0; i < s.items.length; i++) if (!isAnswered(s, i)) missing.push(i + 1);
     if (missing.length) {
