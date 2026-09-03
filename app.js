@@ -1631,10 +1631,10 @@
     root.appendChild(el('div', 'hero',
       '<h1>心理测评</h1><p>' +
       (pushed
-        ? '医生为您安排了 ' + pushed.length + ' 项测评 · 完成后可分享给医生'
-        : '手机即可完成 · 当场出结果 · 可分享给医生') + '</p>'));
+        ? '已为您安排 ' + pushed.length + ' 项测评 · 完成后可分享结果'
+        : '手机即可完成 · 当场出结果 · 可分享结果') + '</p>'));
     const list = pushed ? SCALES.filter(s => pushed.indexOf(s.id) >= 0) : SCALES;
-    if (!list.length) { root.appendChild(el('p', 'empty', '推送链接无效或量表不存在，请向医生索取新链接。')); return; }
+    if (!list.length) { root.appendChild(el('p', 'empty', '推送链接无效或量表不存在，请向发送者索取新链接。')); return; }
     // 按 group 分组
     const groups = [];
     list.forEach(s => { if (!groups.includes(s.group)) groups.push(s.group); });
@@ -1653,12 +1653,12 @@
       root.appendChild(sec);
     });
     if (!pushed) {
-      const pushBtn = el('button', 'btn ghost push-entry', '医生专用：定向推送指定量表给被测者 →');
+      const pushBtn = el('button', 'btn ghost push-entry', '定向推送：把指定量表发给被测者（教练/医生通用）→');
       pushBtn.onclick = openPushModal;
       root.appendChild(pushBtn);
       root.appendChild(el('p', 'foot', '本工具结果仅为量表筛查，不能替代临床诊断。'));
     } else {
-      root.appendChild(el('p', 'foot', '本页面只包含医生安排的测评项目。'));
+      root.appendChild(el('p', 'foot', '本页面只包含安排给您的测评项目。'));
     }
   }
 
@@ -1667,7 +1667,7 @@
     const wrap = el('div', 'modal-mask');
     const box = el('div', 'modal');
     box.innerHTML = '<div class="modal-t">定向推送测评</div>' +
-      '<p class="modal-p">勾选需要被测者完成的量表，生成本次专属链接/二维码。对方打开后只会看到勾选的量表，答完仍可一键分享结果给您。医师评定量表（BPRS、Y-BOCS、YMRS、MADRS、CY-BOCS）不参与推送。</p>';
+      '<p class="modal-p">勾选需要被测者完成的量表，生成本次专属链接/二维码。对方打开后只会看到勾选的量表，答完仍可一键分享结果。他评/医师评定量表（BPRS、Y-BOCS、YMRS、MADRS、CY-BOCS）不参与推送。</p>';
     const scroll = el('div', 'modal-scroll');
     SCALES.filter(s => s.role !== 'clinician').forEach(s => {
       const lab = el('label', 'pick');
@@ -1864,7 +1864,7 @@
     if (!isReport) {
       const save = el('button', 'btn', '保存到本机');
       save.onclick = () => saveToArchive(buildReportPayload(s, result));
-      const share = el('button', 'btn primary', '分享给医生');
+      const share = el('button', 'btn primary', '分享结果');
       share.onclick = () => openShare(s, result);
       const home = el('button', 'btn ghost', '返回首页');
       home.onclick = () => show('home');
@@ -1891,8 +1891,8 @@
     const url = location.origin + location.pathname + '#r=' + b64encode(payload);
     const wrap = el('div', 'modal-mask');
     const box = el('div', 'modal');
-    box.innerHTML = '<div class="modal-t">分享给医生</div>' +
-      '<p class="modal-p">把下面的链接发给医生（微信/短信均可），医生点开即可查看结果；也可让医生扫码。</p>';
+    box.innerHTML = '<div class="modal-t">分享结果</div>' +
+      '<p class="modal-p">把下面的链接发给负责人（微信/短信均可），对方点开即可查看结果；也可让对方扫码。</p>';
     const link = el('input', 'share-link'); link.readOnly = true; link.value = url;
     box.appendChild(link);
     const qrBox = el('div', 'qr');
