@@ -427,12 +427,13 @@
           if (m > 3) note = '明显'; else if (m > 2) note = '偏高';
           return { label: f.name, value: m.toFixed(2), note };
         });
-        const screen = (total > 160) || (positive > 43) || factorRows.some(r => parseFloat(r.value) > 2);
+        const screen = total > 160;
         const level = screen ? 'positive' : 'negative';
-        const levelText = screen ? '筛查阳性' : '筛查阴性';
+        const levelText = screen ? '总分偏高（筛查阳性）' : '总分未达异常界值';
+        const _otherAbn = (positive > 43) || factorRows.some(r => parseFloat(r.value) > 2);
         const note = screen
-          ? '总分、阳性项目数或因子分达到筛查阳性标准，提示可能存在明显心理症状，建议进一步临床评估。'
-          : '各项指标未达筛查阳性标准，未见明显症状聚集。';
+          ? 'SCL-90 总分 ' + total + ' 超过 160 的筛查阳性界值，提示可能存在明显心理症状，建议进一步临床评估。'
+          : 'SCL-90 总分 ' + total + ' 未超过 160 的异常界值，未见明显症状聚集。' + (_otherAbn ? '（注：阳性项目数或个别因子均分偏高，临床仍可结合关注。）' : '');
         return {
           level, levelText,
           sections: [
